@@ -1,17 +1,4 @@
-# Milestone 1: Data preprocessing for the NBA Games dataset
-#
-# What this script does:
-#   1. Loads all 5 CSV files (games, games_details, players, ranking, teams).
-#   2. Checks each one for missing values and duplicates.
-#   3. Handles the missing data. For each column we first ask WHY the value is missing,
-#      then decide whether to fill it, flag it, or drop it (instead of deleting rows by default).
-#   4. Joins the tables to check that the IDs line up.
-#   5. Saves the cleaned files to data/clean/.
-#
-# How to run: put the unzipped NBA_dataset folder in data/raw/, then press Run.
-
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
@@ -43,10 +30,6 @@ def missing_summary(df, name):
     else:
         print(pd.DataFrame({"missing": missing, "percent": (missing / len(df) * 100).round(1)}))
 
-
-# ----------------------------------------------------------------------------
-# 1. Load the data
-# ----------------------------------------------------------------------------
 section("1. LOAD ALL 5 FILES")
 teams = pd.read_csv(RAW / "teams.csv")
 players = pd.read_csv(RAW / "players.csv")
@@ -54,19 +37,8 @@ ranking = pd.read_csv(RAW / "ranking.csv")
 games = pd.read_csv(RAW / "games.csv")
 details = pd.read_csv(RAW / "games_details.csv", low_memory=False)
 
-for name, df in [("teams", teams), ("players", players), ("ranking", ranking),
-                 ("games", games), ("games_details", details)]:
-    missing_summary(df, name)
-    # Which columns have at least one missing value? (axis=0 checks each column)
-    print("  columns with missing values:", list(df.columns[df.isnull().any(axis=0)]))
-
-
-# ----------------------------------------------------------------------------
-# 2. teams.csv
-# ----------------------------------------------------------------------------
-section("2. TEAMS")
+# teams.csv
 print(teams[["ABBREVIATION", "ARENACAPACITY"]].sort_values("ARENACAPACITY").head(6))
-
 # Orlando's arena capacity is 0, which is impossible. A 0 here really means "unknown",
 # so we turn it into a missing value first.
 teams["ARENACAPACITY"] = teams["ARENACAPACITY"].replace(0, np.nan)
@@ -76,13 +48,8 @@ teams["ARENACAPACITY"] = teams["ARENACAPACITY"].replace(0, np.nan)
 # We keep a flag so we always know which values were filled in.
 teams["ARENACAPACITY_FILLED"] = teams["ARENACAPACITY"].isnull().astype(int)
 teams["ARENACAPACITY"] = teams["ARENACAPACITY"].fillna(teams["ARENACAPACITY"].median())
-print("filled arena capacities:", teams["ARENACAPACITY_FILLED"].sum())
 
-
-# ----------------------------------------------------------------------------
-# 3. players.csv
-# ----------------------------------------------------------------------------
-section("3. PLAYERS")
+# players.csv
 # No missing values. Check for duplicates and which seasons are covered.
 print("duplicate rows:", players.duplicated().sum())
 print("seasons covered:", players["SEASON"].min(), "to", players["SEASON"].max())
